@@ -5,18 +5,9 @@ using UnityEngine.InputSystem;
 
 public class PlayerScript : MonoBehaviour
 {
-    private Vector2 movingToPos;
-    private Vector2 groundPos;
-    private Vector2 airPos;
+    [SerializeField] private Rigidbody2D rb;
     private float time = 0f;
-    private bool inAir;
-
-    private void Awake()
-    {
-        groundPos = transform.position;
-        airPos = new Vector2(transform.position.x, 4);
-        movingToPos = groundPos;
-    }
+    private bool air;
 
     public void Jump(InputAction.CallbackContext context)
     {
@@ -24,10 +15,9 @@ public class PlayerScript : MonoBehaviour
         {
             Debug.Log("jump! " + context);
 
-            movingToPos = airPos;
+            air = true;
 
-            inAir = true;
-
+            // to wait before going down
             time = Time.time;
         }
     }
@@ -38,20 +28,26 @@ public class PlayerScript : MonoBehaviour
         {
             Debug.Log("Ground! " + context);
 
-            movingToPos = groundPos;
-
-            inAir = false;
+            air = false;
         }
     }
 
     private void Update()
     {
-        if (time <= Time.time - 0.8 && inAir)
+        if (time <= Time.time - 0.45 && air)
         {
-            movingToPos = groundPos;
-            inAir = false;
+            air = false;
         }
 
-        transform.position = movingToPos;
+        switch (air)
+        {
+            case true:
+                rb.gravityScale = -300;
+                break;
+            case false:
+                rb.gravityScale = 50;
+                break;
+        }
+
     }
 }
