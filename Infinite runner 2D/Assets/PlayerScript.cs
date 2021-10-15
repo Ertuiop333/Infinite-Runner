@@ -8,6 +8,7 @@ public class PlayerScript : MonoBehaviour
     private HitBoxController[] hitBoxController = new HitBoxController[2];
     
     [SerializeField] private Rigidbody2D rb;
+
     private float timeLastJumped = 0f;
     private bool jumped;
     private float timeLastGrounded = 0f;
@@ -123,7 +124,7 @@ public class PlayerScript : MonoBehaviour
         switch (air)
         {
             case 2:
-                rb.gravityScale = -55;
+                rb.gravityScale = -100;
                 break;
             case 1:
                 rb.gravityScale = 0;
