@@ -9,12 +9,12 @@ public class PlayerScriptTranform : MonoBehaviour
 
     [SerializeField] private Rigidbody2D rb;
 
-    private float timeLastJumped = 0f;
+    private float timeLastInputJump = 0f;
+    private float timeBeforeGoingDown = 0f;
     private bool jumped;
-    private float timeLastGrounded = 0f;
+    private float timeLastInputGround = 0f;
     private bool grounded;
-    private float timeLastMiddled = 0f;
-    private bool middled;
+    private float timeLastInputMiddle = 0f;
     private int air;
 
     private void Awake()
@@ -27,19 +27,19 @@ public class PlayerScriptTranform : MonoBehaviour
     {
         if (context.performed)
         {
-            if (Time.time - 0.04f <= timeLastGrounded) // pressed grounded 0.04 sec ago
+            if (Time.time - 0.06f <= timeLastInputGround && timeLastInputMiddle <= Time.time - 0.12f)
             {
-                middled = true;
+                grounded = false;
 
                 Middle();
 
-                timeLastMiddled = Time.time;
+                timeLastInputMiddle = Time.time; // stores the time you middled
             }
-            else if (!jumped)
+            else if (timeLastInputJump <= Time.time - 0.122f)
             {
                 jumped = true;
 
-                timeLastJumped = Time.time;// stores the time you jumped
+                timeLastInputJump = Time.time;// stores the time you jumped
             }
         }
     }
@@ -48,19 +48,19 @@ public class PlayerScriptTranform : MonoBehaviour
     {
         if (context.performed)
         {
-            if (Time.time - 0.04f <= timeLastJumped) // pressed jumped 0.04 sec ago
+            if (Time.time - 0.06f <= timeLastInputJump && timeLastInputMiddle <= Time.time - 0.12f)
             {
-                middled = true;
+                jumped = false;
 
                 Middle();
 
-                timeLastMiddled = Time.time;
+                timeLastInputMiddle = Time.time; // stores the time you middled
             }
-            else if (!grounded)
+            else if (timeLastInputGround <= Time.time - 0.122f)
             {
                 grounded = true;
 
-                timeLastGrounded = Time.time; // stores the time you grounded
+                timeLastInputGround = Time.time; // stores the time you grounded
             }
         }
     }
@@ -73,61 +73,56 @@ public class PlayerScriptTranform : MonoBehaviour
         hitNoteGround = hitBoxController[0].CheckNote();
 
         air = 1;
+
+        timeBeforeGoingDown = Time.time;
     }
 
     private void Update()
     {
-        // air waiters
-        if (timeLastJumped <= Time.time - 0.6f && air == 2)
+        // air waiter
+        if (timeBeforeGoingDown <= Time.time - 0.6f && air >= 1)
             air = 0;
 
-        if (timeLastMiddled <= Time.time - 0.6f && air == 1)
-            air = 0;
-
-        // middle wait 
-        if (timeLastMiddled <= Time.time - 0.25f )
-            middled = false;
-
-        // actions
-        if (timeLastJumped <= Time.time - 0.04f && jumped)
+        // action jump
+        if (timeLastInputJump <= Time.time - 0.061f && jumped)
         {
             bool hitNoteAir;
             hitNoteAir = hitBoxController[1].CheckNote();
 
-            air = 2;
+            if (hitNoteAir || air == -1)
+            {
+                air = 2;
+
+                if (hitBoxController[0].note != null)
+                    hitBoxController[0].note.transform.localScale = new Vector2(hitBoxController[0].note.transform.localScale.x / 2, hitBoxController[0].note.transform.localScale.y / 2);
+
+                timeBeforeGoingDown = Time.time;
+            }
 
             jumped = false;
         }
-
-        if (timeLastGrounded <= Time.time - 0.04f && grounded)
+        // action ground
+        if (timeLastInputGround <= Time.time - 0.061f && grounded)
         {
             bool hitNoteGround;
             hitNoteGround = hitBoxController[0].CheckNote();
 
             air = -1;
 
-            grounded = false;
-        }
+            if (hitBoxController[1].note != null)
+                hitBoxController[1].note.transform.localScale = new Vector2(hitBoxController[1].note.transform.localScale.x / 2, hitBoxController[1].note.transform.localScale.y / 2);
 
-        // shut them up if middle (contain the on that triggered first before middle trigered)
-        if (middled)
-        {
             grounded = false;
-            jumped = false;
         }
 
         // actualy switch the gravity scale based on the air number
         switch (air)
         {
             case 2:
-                // rb.gravityScale = 0;
-                // rb.isKinematic = true;
                 rb.velocity = new Vector2(0, 0);
                 transform.position = new Vector2(transform.position.x, 4f);
                 break;
             case 1:
-                // rb.gravityScale = 0;
-                // rb.isKinematic = true;
                 rb.velocity = new Vector2(0, 0);
                 transform.position = new Vector2(transform.position.x, 2.5f);
                 break;
@@ -136,11 +131,17 @@ public class PlayerScriptTranform : MonoBehaviour
                 rb.velocity = new Vector2(0, -9);
                 break;
             case -1:
-                // rb.gravityScale = 0;
-                // rb.isKinematic = true;
                 rb.velocity = new Vector2(0, 0);
                 transform.position = new Vector2(transform.position.x, 1);
                 break;
+        }
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            air = -1;
         }
     }
 }

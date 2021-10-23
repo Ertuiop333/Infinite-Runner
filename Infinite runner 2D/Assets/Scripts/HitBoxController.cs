@@ -5,7 +5,7 @@ using UnityEngine;
 public class HitBoxController : MonoBehaviour
 {
     private bool collide;
-    private GameObject note;
+    [HideInInspector] public GameObject note;
 
     public bool CheckNote()
     {
@@ -13,20 +13,21 @@ public class HitBoxController : MonoBehaviour
 
         if (collide)
         {
-            Debug.Log("hit note!");
-
-            Destroy(note);
+            Destroy(note.gameObject);
 
             hit = true;
         }
         else
         {
-            Debug.Log("didn't hit...");
-
             hit = false;
         }
 
         return hit;
+    }
+
+    public void DestroyNote()
+    {
+        Destroy(note.gameObject);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)

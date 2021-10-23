@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class NoteController : MonoBehaviour
 {
-    [SerializeField] private float speed = 6;
+    public float speed = 6;
 
     private void Update()
     {
